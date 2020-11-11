@@ -104,7 +104,6 @@ things to a few hours.
     2020-11-10 14:00 UTC+1 (Tuesday)
     2020-11-10 14:30 UTC+1 (Tuesday)
     2020-11-10 15:00 UTC+1 (Tuesday)
-    2020-11-10 15:30 UTC+1 (Tuesday)
     ...
     
 
@@ -120,7 +119,6 @@ example below we're combining it with the parameters from the previous example.
     2020-11-10 14:00 UTC+1 (Tuesday)
     2020-11-10 14:30 UTC+1 (Tuesday)
     2020-11-10 15:00 UTC+1 (Tuesday)
-    2020-11-10 15:30 UTC+1 (Tuesday)
     ...
 
 (In the example you get Saturdays and Sundays, in the future the will be possible
@@ -148,18 +146,57 @@ comma-separated list of first.last-names (no spaces after the comma!).
     2020-11-11 18:00 UTC+1 (Wednesday)
     2020-11-12 18:00 UTC+1 (Thursday)
     2020-11-13 16:00 UTC+1 (Friday)
-    2020-11-13 16:30 UTC+1 (Friday)
-    2020-11-13 17:00 UTC+1 (Friday)
-    2020-11-13 17:30 UTC+1 (Friday)
-    2020-11-13 18:00 UTC+1 (Friday)
+    ...
+
+
+List additional timezones
+=========================
+If you want to show the suggested slots in other timezones than your own default
+timezone, then you can do that by adding UTC's after the "``-eu``" (extra UTCs).
+Note that there is a limitation with the Python Argparser treating negative
+numbers as parameters. The workaround will be shown as an example further down.
+
+Here is an example to get the times UTC+2 and UTC-3 in addition to the default
+timezone.
+
+.. code-block:: bash
+
+    $ ./gcs.py -eu 2,-3
+    2020-11-11 08:00 UTC+1, 09:00 UTC+2, 04:00 UTC-3 (Wednesday)
+    2020-11-11 08:30 UTC+1, 09:30 UTC+2, 04:30 UTC-3 (Wednesday)
+    2020-11-11 09:00 UTC+1, 10:00 UTC+2, 05:00 UTC-3 (Wednesday)
+    ...
+
+
+Here is are a couple of examples on how to use negative numbers.
+
+.. code-block:: bash
+
+    # A single negative number [OK]
+    $ ./gcs.py -eu -3
+    2020-11-11 08:00 UTC+1, 04:00 UTC-3 (Wednesday)
+    2020-11-11 08:30 UTC+1, 04:30 UTC-3 (Wednesday)
+    2020-11-11 09:00 UTC+1, 05:00 UTC-3 (Wednesday)
+    ...
+
+    # Two negative number [NOK, argparser bug]
+    $ ./gcs.py -eu -3,-4
+    ...
+    gcs.py: error: argument -eu/--extra-utc: expected one argument
+
+    # Workaround for argparser bug when using two negative numbers
+    $ ./gcs.py -eu 0,-3,-4
+    2020-11-11 08:00 UTC+1, 07:00 UTC+0, 04:00 UTC-3, 03:00 UTC-4 (Wednesday)
+    2020-11-11 08:30 UTC+1, 07:30 UTC+0, 04:30 UTC-3, 03:30 UTC-4 (Wednesday)
+    2020-11-11 09:00 UTC+1, 08:00 UTC+0, 05:00 UTC-3, 04:00 UTC-4 (Wednesday)
+    ...
+
 
 ToDo
 ****
 - Fix so you can add timezone as a parameter or config file.
 - Give option to remove Saturdays and Sundays.
 - Give option to get suggestions on hour basis instead of just half hour basis.
-- Add parameter to show the time in more than a single timezone (meant for the
-  receiver in another timezone).
 - Remove hard-code "joakim.bech" as the default person.
 - General cleanup, since this was a quick and dirty hack, that nevertheless
   seems to work fine.

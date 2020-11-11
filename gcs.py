@@ -68,7 +68,7 @@ def get_parser():
             help='Your own UTCs (default is +1)')
 
     parser.add_argument('-eu', '--extra-utc', required=False, action="store", \
-            default="0", \
+            default=None, \
             help='Comma separated list of extra UTCs to show')
 
     return parser
@@ -149,6 +149,52 @@ def parse_result(result, timezone):
                     offset += 30
 
 
+def get_offset(sign, timezone):
+    offset = timezone * 3600
+    if sign == "-":
+        offset *= -1
+
+    return offset
+
+
+def print_free_slots(args, freelist, sign, timezone):
+    for l in freelist:
+        # Hard coded at this position
+        hour = int(l[11:13])
+        if hour >= int(args.no_earlier) and hour < int(args.no_later):
+            main_res = "{} UTC{}{}".format(l, sign, timezone)
+            if args.extra_utc:
+                for u in args.extra_utc.split(","):
+                    tmpsign = get_sign(u)
+                    tmptz = get_timezone(u)
+                    offset = get_offset(tmpsign, int(tmptz))
+                    doffset = parse(l).astimezone(dateutil.tz.tzoffset(None, offset))
+                    tmp_h = doffset.hour
+                    tmp_m = doffset.minute
+                    main_res = "{}, {:02d}:{:02d} UTC{}{}".format(main_res, tmp_h, tmp_m, tmpsign, tmptz)
+            print("{} ({})".format(main_res, calendar.day_name[parse(l).weekday()]))
+
+
+def get_sign(utcstr):
+    sign = "+"
+    if utcstr[0] == "-":
+        sign = "-"
+
+    return sign
+
+
+def get_timezone(utcstr):
+    timezone = None
+
+    if utcstr[0] == "-":
+        timezone = utcstr[1:]
+    elif utcstr[0] == "+":
+        timezone = utcstr[1:]
+    elif len(utcstr) == 1 and utcstr.isdigit():
+        timezone = utcstr
+
+    return timezone
+
 def main():
     global freelist
 
@@ -156,18 +202,8 @@ def main():
 
     logger.debug(args)
 
-    # This is UTC ...
-    sign = "+"
-    timezone = "1"
-
-    if args.utc[0] == "-":
-        sign = "-"
-        timezone = args.utc[1:]
-    elif args.utc[0] == "+":
-        sign = "+"
-        timezone = args.utc[1:]
-    elif len(args.utc) == 1 and args.utc.isdigit():
-        timezone = args.utc
+    sign = get_sign(args.utc)
+    timezone = get_timezone(args.utc)
 
     service = create_service()
 
@@ -205,12 +241,7 @@ def main():
         logger.debug(l)
 
     parse_result(result, timezone)
-
-    for l in freelist:
-        # Hard coded at this position
-        hour = int(l[11:13])
-        if hour >= int(args.no_earlier) and hour < int(args.no_later):
-            print("{} UTC+{} ({})".format(l, timezone, calendar.day_name[parse(l).weekday()]))
+    print_free_slots(args, freelist, sign, timezone)
 
 
 if __name__ == '__main__':
