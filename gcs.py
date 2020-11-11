@@ -51,10 +51,6 @@ def get_parser():
             default=today_str, \
             help='End date on format YYYY-MM-DD')
 
-    parser.add_argument('-u', '--utc', required=False, action="store", \
-            default=1, \
-            help='UTC (should be a number 1, 2, ..., -1 etc)')
-
     parser.add_argument('-ne', '--no-earlier', required=False, action="store", \
             default=8, \
             help='Hide slots earlier than <hour> (08, 10, 21 etc)')
@@ -66,6 +62,14 @@ def get_parser():
     parser.add_argument('-p', '--people', required=False, action="store", \
             default="joakim.bech", \
             help='Comma separated list of people to invite')
+
+    parser.add_argument('-u', '--utc', required=False, action="store", \
+            default="+1", \
+            help='Your own UTCs (default is +1)')
+
+    parser.add_argument('-eu', '--extra-utc', required=False, action="store", \
+            default="0", \
+            help='Comma separated list of extra UTCs to show')
 
     return parser
 
@@ -153,12 +157,23 @@ def main():
     logger.debug(args)
 
     # This is UTC ...
+    sign = "+"
     timezone = "1"
+
+    if args.utc[0] == "-":
+        sign = "-"
+        timezone = args.utc[1:]
+    elif args.utc[0] == "+":
+        sign = "+"
+        timezone = args.utc[1:]
+    elif len(args.utc) == 1 and args.utc.isdigit():
+        timezone = args.utc
 
     service = create_service()
 
-    start_date = "{}T08:00:00-{:02d}00".format(args.start, int(timezone))
-    end_date   = "{}T21:00:00-{:02d}00".format(args.end, int(timezone))
+    start_date = "{}T08:00:00{}{:02d}00".format(args.start, sign, int(timezone))
+    end_date   = "{}T21:00:00{}{:02d}00".format(args.end, sign, int(timezone))
+
 
     logger.debug(start_date)
     logger.debug(end_date)

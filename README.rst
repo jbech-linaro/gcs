@@ -156,7 +156,6 @@ comma-separated list of first.last-names (no spaces after the comma!).
 ToDo
 ****
 - Fix so you can add timezone as a parameter or config file.
-- Fix so negative UTC is working.
 - Give option to remove Saturdays and Sundays.
 - Give option to get suggestions on hour basis instead of just half hour basis.
 - Add parameter to show the time in more than a single timezone (meant for the
