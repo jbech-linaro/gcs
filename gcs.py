@@ -4,6 +4,7 @@ import calendar
 import datetime
 import dateutil.parser
 import logging
+import math
 import os.path
 import pandas as pd
 import pickle
@@ -71,6 +72,10 @@ def get_parser():
             default=None, \
             help='Comma separated list of extra UTCs to show')
 
+    parser.add_argument('-g', '--granularity', required=False, action="store", \
+            default=0.5, \
+            help='Granularity for meeting slots (default: 0.5h slots)')
+
     return parser
 
 
@@ -110,7 +115,7 @@ def send_query(service, query):
     return result
 
 
-def parse_result(result, timezone):
+def parse_result(result, timezone, granularity):
     global freelist
 
     persons = result.get('calendars', [])
@@ -131,17 +136,19 @@ def parse_result(result, timezone):
             m_end = end.minute
 
             delta = end - start
-            nbrof_halfhours = round(delta.total_seconds() / 1800);
+
+            nbrof_halfhours = math.ceil(delta.total_seconds() / (float(granularity) * 1800.0 * 2));
 
             # 2020-11-25 21:00
             offset = 0
             logger.debug("Busy: {}/{}: {:02d}.{:02d}-{:02d}.{:02d} ({})".format(day_start, month_start, h_start, m_start, h_end, m_end, timezone))
+            logger.debug("nbrof_halfhours: {}".format(nbrof_halfhours))
             for i in range(0, nbrof_halfhours):
                 current = start + relativedelta(minutes = offset)
-                # Strip away the ":00+00:00"
+                # Strip away the ":00+00:00" part of the string
                 tmp = str(current)[:-9]
-                logger.debug("Removing: {}".format(tmp))
                 try:
+                    logger.debug("Removing: {} (delta: {})".format(tmp, delta))
                     freelist.remove(tmp)
                 except ValueError:
                     pass
@@ -231,8 +238,10 @@ def main():
 
     result = send_query(service, query)
 
+    frequency = "{}T".format(60 * float(args.granularity))
+
     freelist = (pd.DataFrame(columns=['NULL'],
-                index=pd.date_range(start_date, end_date, freq='30T'))
+                index=pd.date_range(start_date, end_date, freq=frequency))
                 .between_time('08:00','21:00')
                 .index.strftime('%Y-%m-%d %H:%M')
                 .tolist())
@@ -240,7 +249,7 @@ def main():
     for l in freelist:
         logger.debug(l)
 
-    parse_result(result, timezone)
+    parse_result(result, timezone, args.granularity)
     print_free_slots(args, freelist, sign, timezone)
 
 
