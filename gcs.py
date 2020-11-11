@@ -64,7 +64,7 @@ def get_parser():
             help='Hide slots after <hour> (08, 10, 21 etc)')
 
     parser.add_argument('-p', '--people', required=False, action="store", \
-            default="joakim.bech@linaro.org", \
+            default="joakim.bech", \
             help='Comma separated list of people to invite')
 
     return parser
