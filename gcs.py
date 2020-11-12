@@ -11,6 +11,7 @@ import pickle
 import sys
 from argparse import ArgumentParser
 from dateutil import tz
+from dateutil import rrule
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -234,7 +235,12 @@ def get_timezone(utcstr):
     return timezone
 
 
-def generate_stats(result, args):
+def weeks_between(start_date, end_date):
+    weeks = rrule.rrule(rrule.WEEKLY, dtstart=start_date, until=end_date)
+    return weeks.count()
+
+
+def generate_stats(result, args, start_date, end_date):
     persons = result.get('calendars', [])
     final_stats = {}
     total = 0
@@ -269,12 +275,19 @@ def generate_stats(result, args):
 
     final_sorted = sorted(final_stats, key=final_stats.get, reverse=True)
 
+    nbr_of_weeks = weeks_between(dateutil.parser.parse(start_date), dateutil.parser.parse(end_date))
     print("Number meeting hours between {} and {}".format(args.start, args.end))
     print("----------------------------------------------------------------------------")
     for r in final_sorted:
-        print("{: <20} {:02}h ({: >5}h/week)   {: >3} meetings ({:02} meetings/week)".format(r.split("@")[0], final_stats[r], final_stats[r]/4.0, nbr_of_meetings[r], nbr_of_meetings[r] / 4))
-    print("\nTotal amount of the hours for group: {}h ({}h/week)".format(total, total / 4.0))
-    print("Average amount of hours per person: {}h ({}h/week)".format(round(total / amount_of_people), round(total / amount_of_people / 4)))
+        print("{: <20} {: >3}h ({: >5}h/week)   {: >3} meetings ({: >3} meetings/week)".format(r.split("@")[0],
+                                                                                               round(final_stats[r]),
+                                                                                               round(final_stats[r] / nbr_of_weeks),
+                                                                                               nbr_of_meetings[r],
+                                                                                               round(nbr_of_meetings[r] / nbr_of_weeks)))
+    print("\nTotal amount of the hours for group: {}h ({}h/week)".format(round(total),
+                                                                         round(total / nbr_of_weeks)))
+    print("Average amount of hours per person: {}h ({}h/week)".format(round(total / amount_of_people),
+                                                                      round(total / amount_of_people / nbr_of_weeks)))
     print("Cost for meeting under this period ($100/h): ${}".format(round(total * 100.0)))
     print("----------------------------------------------------------------------------")
 
@@ -323,7 +336,7 @@ def main():
     result = send_query(service, query)
 
     if args.stats:
-        generate_stats(result, args)
+        generate_stats(result, args, start_date, end_date)
         return
 
     frequency = "{}T".format(60 * float(args.granularity))
