@@ -168,7 +168,18 @@ def get_offset(sign, timezone):
     return offset
 
 
+def print_header(args):
+    print("Here are the free ({} min) slots working for me/us".format(round(float(args.granularity) * 60)))
+    print("--------------------------------------------------")
+
+
+def print_footer():
+    print("\n(https://everytimezone.com is a useful tool for timezone conversion)")
+
+
 def print_free_slots(args, freelist, sign, timezone):
+    print_header(args)
+
     for l in freelist:
         # Hard coded at this position
         hour = int(l[11:13])
@@ -189,6 +200,8 @@ def print_free_slots(args, freelist, sign, timezone):
                     tmp_m = doffset.minute
                     main_res = "{}, {:02d}:{:02d} UTC{}{}".format(main_res, tmp_h, tmp_m, tmpsign, tmptz)
             print("{} ({})".format(main_res, weekday))
+
+    print_footer()
 
 
 def get_sign(utcstr):
