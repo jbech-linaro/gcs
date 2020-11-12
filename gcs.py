@@ -76,6 +76,10 @@ def get_parser():
             default=0.5, \
             help='Granularity for meeting slots (default: 0.5h slots)')
 
+    parser.add_argument('-w', '--show-weekend', required=False, action="store_true", \
+            default=False, \
+            help='Use this if you want to show Saturdays and Sundays as well')
+
     return parser
 
 
@@ -170,6 +174,11 @@ def print_free_slots(args, freelist, sign, timezone):
         hour = int(l[11:13])
         if hour >= int(args.no_earlier) and hour < int(args.no_later):
             main_res = "{} UTC{}{}".format(l, sign, timezone)
+
+            weekday = calendar.day_name[parse(l).weekday()]
+            if args.show_weekend == False and weekday in "Sunday Saturday":
+                continue
+
             if args.extra_utc:
                 for u in args.extra_utc.split(","):
                     tmpsign = get_sign(u)
@@ -179,7 +188,7 @@ def print_free_slots(args, freelist, sign, timezone):
                     tmp_h = doffset.hour
                     tmp_m = doffset.minute
                     main_res = "{}, {:02d}:{:02d} UTC{}{}".format(main_res, tmp_h, tmp_m, tmpsign, tmptz)
-            print("{} ({})".format(main_res, calendar.day_name[parse(l).weekday()]))
+            print("{} ({})".format(main_res, weekday))
 
 
 def get_sign(utcstr):

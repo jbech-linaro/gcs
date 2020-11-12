@@ -121,8 +121,6 @@ example below we're combining it with the parameters from the previous example.
     2020-11-10 15:00 UTC+1 (Tuesday)
     ...
 
-(In the example you get Saturdays and Sundays, in the future the will be possible
-to remove those.)
 
 If you omit the start ("``-s``"), then it'll use the current day. Meaning that
 if you want to find a slot starting from "today" and X days in the future, then
@@ -192,10 +190,28 @@ Here is are a couple of examples on how to use negative numbers.
     ...
 
 
+Show weekends
+=============
+This is an unlikely use case, but if for some reason one wants to suggest calls
+during the weekend, then that can be done with the "``-w``" parameter. Here is
+an example combined with some other parameters.
+
+.. code-block:: bash
+
+    $ ./gcs.py  -e 2020-11-16 -s 2020-11-13 -e 2020-11-16 -nl 19 -ne 17 -w
+    2020-11-13 17:00 UTC+1 (Friday)
+    2020-11-13 17:30 UTC+1 (Friday)
+    2020-11-13 18:00 UTC+1 (Friday)
+    2020-11-14 17:00 UTC+1 (Saturday)
+    2020-11-14 17:30 UTC+1 (Saturday)
+    2020-11-14 18:00 UTC+1 (Saturday)
+    2020-11-15 17:00 UTC+1 (Sunday)
+    ...
+
+
 ToDo
 ****
 - Fix so you can add timezone as a parameter or config file.
-- Give option to remove Saturdays and Sundays.
 - Give option to get suggestions on hour basis instead of just half hour basis.
 - Remove hard-code "joakim.bech" as the default person.
 - General cleanup, since this was a quick and dirty hack, that nevertheless
