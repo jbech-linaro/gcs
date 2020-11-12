@@ -237,9 +237,15 @@ def get_timezone(utcstr):
 def generate_stats(result, args):
     persons = result.get('calendars', [])
     final_stats = {}
+    total = 0
+    amount_of_people = 0.0
+    nbr_of_meetings = {}
     for p in persons:
         logger.debug(p)
+        amount_of_people += 1
+        nbr_of_meetings[p] = 0
         for b in persons[p]["busy"]:
+            nbr_of_meetings[p] += 1
             start = dateutil.parser.parse(b["start"])
             logger.debug(start)
             day_start = start.day
@@ -254,18 +260,23 @@ def generate_stats(result, args):
             m_end = end.minute
 
             delta = end - start
+            h_delta = round(delta.seconds / (60 * 60.0))
+            total += h_delta
             try:
-                final_stats[p] += round(delta.seconds / (60 * 60.0))
+                final_stats[p] += h_delta
             except KeyError:
-                final_stats[p] = round(delta.seconds / (60 * 60.0))
+                final_stats[p] = h_delta
 
     final_sorted = sorted(final_stats, key=final_stats.get, reverse=True)
 
     print("Number meeting hours between {} and {}".format(args.start, args.end))
-    print("------------------------------------------------------")
+    print("----------------------------------------------------------------------------")
     for r in final_sorted:
-        print("{}: {} ({}/week)".format(r, final_stats[r], final_stats[r]/4.0))
-
+        print("{: <20} {:02}h ({: >5}h/week)   {: >3} meetings ({:02} meetings/week)".format(r.split("@")[0], final_stats[r], final_stats[r]/4.0, nbr_of_meetings[r], nbr_of_meetings[r] / 4))
+    print("\nTotal amount of the hours for group: {}h ({}h/week)".format(total, total / 4.0))
+    print("Average amount of hours per person: {}h ({}h/week)".format(round(total / amount_of_people), round(total / amount_of_people / 4)))
+    print("Cost for meeting under this period ($100/h): ${}".format(round(total * 100.0)))
+    print("----------------------------------------------------------------------------")
 
 def main():
     global freelist
