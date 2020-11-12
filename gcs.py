@@ -80,6 +80,14 @@ def get_parser():
             default=False, \
             help='Use this if you want to show Saturdays and Sundays as well')
 
+    parser.add_argument('--stats', required=False, action="store_true", \
+            default=False, \
+            help='Generate stats for a person')
+
+    parser.add_argument('--file', required=False, action="store", \
+            default="people.txt", \
+            help='File with email addresses of Linaro employees')
+
     return parser
 
 
@@ -225,6 +233,40 @@ def get_timezone(utcstr):
 
     return timezone
 
+
+def generate_stats(result, args):
+    persons = result.get('calendars', [])
+    final_stats = {}
+    for p in persons:
+        logger.debug(p)
+        for b in persons[p]["busy"]:
+            start = dateutil.parser.parse(b["start"])
+            logger.debug(start)
+            day_start = start.day
+            month_start = start.month
+            h_start = start.hour
+            m_start = start.minute
+
+            end = dateutil.parser.parse(b["end"])
+            day_end = end.day
+            month_end = end.month
+            h_end = end.hour
+            m_end = end.minute
+
+            delta = end - start
+            try:
+                final_stats[p] += round(delta.seconds / (60 * 60.0))
+            except KeyError:
+                final_stats[p] = round(delta.seconds / (60 * 60.0))
+
+    final_sorted = sorted(final_stats, key=final_stats.get, reverse=True)
+
+    print("Number meeting hours between {} and {}".format(args.start, args.end))
+    print("------------------------------------------------------")
+    for r in final_sorted:
+        print("{}: {} ({}/week)".format(r, final_stats[r], final_stats[r]/4.0))
+
+
 def main():
     global freelist
 
@@ -253,6 +295,14 @@ def main():
 
     logger.debug(invitees)
 
+    if args.stats:
+        if args.file:
+            invitees = []
+            with open(args.file) as f:
+                employees = f.readlines()
+                for e in employees:
+                    invitees.append({ "id": e.rstrip() })
+
     query = { "timeMin": start_date,
               "timeMax": end_date,
               "timeZone": "UTC+{}".format(timezone),
@@ -260,6 +310,10 @@ def main():
               }
 
     result = send_query(service, query)
+
+    if args.stats:
+        generate_stats(result, args)
+        return
 
     frequency = "{}T".format(60 * float(args.granularity))
 
