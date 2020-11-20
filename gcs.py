@@ -185,7 +185,8 @@ def print_free_slots(args, freelist, sign, timezone):
         # Hard coded at this position
         hour = int(l[11:13])
         if hour >= int(args.no_earlier) and hour < int(args.no_later):
-            main_res = "{} UTC{}{}".format(l, sign, timezone)
+            first_entry = l.split(" ")
+            main_res = "{}   {} UTC{}{}".format(first_entry[0], first_entry[1], sign, timezone)
 
             weekday = calendar.day_name[parse(l).weekday()]
             if args.show_weekend == False and weekday in "Sunday Saturday":
@@ -199,7 +200,7 @@ def print_free_slots(args, freelist, sign, timezone):
                     doffset = parse(l).astimezone(dateutil.tz.tzoffset(None, offset))
                     tmp_h = doffset.hour
                     tmp_m = doffset.minute
-                    main_res = "{}, {:02d}:{:02d} UTC{}{}".format(main_res, tmp_h, tmp_m, tmpsign, tmptz)
+                    main_res = "{}   {:02d}:{:02d} UTC{}{}".format(main_res, tmp_h, tmp_m, tmpsign, tmptz)
             print("{} ({})".format(main_res, weekday))
 
     print_footer()
