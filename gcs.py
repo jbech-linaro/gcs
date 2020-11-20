@@ -181,12 +181,20 @@ def print_footer():
 def print_free_slots(args, freelist, sign, timezone):
     print_header(args)
 
+    old_date = None
+    current_date = None
     for l in freelist:
         # Hard coded at this position
         hour = int(l[11:13])
         if hour >= int(args.no_earlier) and hour < int(args.no_later):
             first_entry = l.split(" ")
-            main_res = "{}   {} UTC{}{}".format(first_entry[0], first_entry[1], sign, timezone)
+            current_date = first_entry[0]
+            if current_date == old_date:
+                current_date = ""
+            else:
+                old_date = current_date
+
+            main_res = "{: <10}   {} UTC{}{}".format(current_date, first_entry[1], sign, timezone)
 
             weekday = calendar.day_name[parse(l).weekday()]
             if args.show_weekend == False and weekday in "Sunday Saturday":
